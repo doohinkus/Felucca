@@ -1,16 +1,16 @@
-# Felucca
+# Felucca (w33tsnx)
 
 [![License: GPL-3.0-only](https://img.shields.io/badge/license-GPL--3.0--only-blue.svg)](LICENSE)
 
-![Felucca 1.0](docs/felucca-1.0.png)
+![Felucca (w33tsnx) 1.0](docs/felucca-1.0.png)
 
 Multi-engine synthesizer firmware for the M-VAVE FM-1, **version 1.6**. Connect the FM-1 to a computer by USB, open the
-[web installer](https://hugelton.github.io/Felucca/) in Chrome or Edge and press Install; no extra hardware is needed.
+[web installer](https://doohinkus.github.io/Felucca/) in Chrome or Edge and press Install; no extra hardware is needed.
 Installing is at your own risk: M-VAVE's updater or the installer's **Return to official V15** takes you back.
 Want to look around first? [Try it in your browser](https://hugelton.github.io/Felucca/webapp/try/), no FM-1 needed.
 
-- Install: [web installer](https://hugelton.github.io/Felucca/), or `tools/fm1_install.py` from a terminal
-- Edit: [web editor](https://hugelton.github.io/Felucca/webapp/editor/) (developed in [Felucca-WebApp](https://github.com/hugelton/Felucca-WebApp))
+- Install: [web installer](https://doohinkus.github.io/Felucca/), or `tools/fm1_install.py` from a terminal
+- Edit: [web editor](https://doohinkus.github.io/Felucca/webapp/editor/)
 - Read: the manual is in the [wiki](https://github.com/hugelton/Felucca/wiki/Home): [Installation](https://github.com/hugelton/Felucca/wiki/Installation) ·
   [Controls](https://github.com/hugelton/Felucca/wiki/Controls) · [Menu](https://github.com/hugelton/Felucca/wiki/Menu) ·
   [Engines](https://github.com/hugelton/Felucca/wiki/Engines) · [Release notes](https://github.com/hugelton/Felucca/wiki/Release-Notes) ·
@@ -38,11 +38,11 @@ All changes and what to know before going back: [Release notes](https://github.c
 
 Please report what you find in [Issues](https://github.com/hugelton/Felucca/issues) (reproducible bugs, one per issue). Ideas and
 requests go to [Discussions](https://github.com/hugelton/Felucca/discussions). Pull requests are welcome: see [CONTRIBUTING.md](CONTRIBUTING.md).
-Felucca is GPLv3 and you are free to fork it; before starting yet another fork, please consider whether a PR would do.
+Felucca (w33tsnx) is GPLv3 and you are free to fork it; before starting yet another fork, please consider whether a PR would do.
 
 ## AI disclaimer
 
-Felucca is developed with the assistance of AI coding agents (code, tests, documentation, translation, maintenance). The
+Felucca (w33tsnx) is developed with the assistance of AI coding agents (code, tests, documentation, translation, maintenance). The
 design, features, sound design and direction are the maintainer's or the community's, and no generative AI is used for music,
 icons or artwork. See [On AI-Assisted Development and Responsibility](https://github.com/hugelton/Felucca/discussions/166).
 
@@ -51,6 +51,6 @@ icons or artwork. See [On AI-Assisted Development and Responsibility](https://gi
 Free software: [GPL-3.0-only](LICENSE), the Hügelton Sample Pack included; the bundled fonts and ported DSP keep their own licences
 ([LICENSES/](LICENSES/), [LICENSING.md](LICENSING.md)). Thanks to everyone whose work and contributions are in it: [CREDITS.md](CREDITS.md).
 
-M-VAVE and FM-1 are trademarks of their respective owners. Felucca is not affiliated with or endorsed by them.
+M-VAVE and FM-1 are trademarks of their respective owners. Felucca (w33tsnx) is not affiliated with or endorsed by them.
 
 Copyright (C) 2026 Leo Kuroshita (@kurogedelic), Hügelton Instruments
