@@ -1616,6 +1616,66 @@ static int test_display_preferences(void)
     return bad;
 }
 
+/* the stage's wheat (ui_graph.c wheat_page): HOME, ENV, LFO, FX and the engine scope pages show two stalks
+ * swaying out of step; a list, a roll, the LARGE strip and the charts have none; the sway repaints only the
+ * two 12 x 30 tiles, so nothing else may be drawn into them */
+static int test_wheat(void)
+{
+    int bad = 0;
+    {
+        static uint16_t f0[12 * 30], f2[12 * 30];
+        uint32_t i, diff = 0, ink = 0;
+        cv_oy = 0;
+        cv_begin(12, 30, T_SURF);
+        wheat_draw(0, 0, 0);
+        memcpy(f0, cv_px, sizeof f0);
+        cv_begin(12, 30, T_SURF);
+        wheat_draw(0, 0, 2);
+        memcpy(f2, cv_px, sizeof f2);
+        for (i = 0; i < 12u * 30u; i++) {
+            diff += f0[i] != f2[i];
+            ink += swap16(f0[i]) == T_THEME;
+        }
+        ui_power_on();
+        ui.force = 1; ui_draw();
+        bad += check("wheat: it sways (frames differ), the kernels are themed, HOME shows it, the stage narrows",
+                     diff > 4u && ink > 10u && ui.wheat == 1u && PANEL_X0 == 24 && PANEL_W == 192);
+        go_title("PRESETS");
+        ui.force = 1; ui_draw();
+        bad += check("  a list page: no wheat, the full width", ui.wheat == 0u && PANEL_X0 == 10 && PANEL_W == 220);
+    }
+    {
+        static const char *const PG[4] = {0, "ENV", "LFO", "FX"};
+        uint32_t k, x, y, n = 0, pages = 0;
+        track_t keep = *TSEL;
+        for (k = 0; k < 4u; k++) {
+            ui_power_on();
+            TSEL->p[P_ATK] = 0;                          /* (the steepest attack, the shortest release: the */
+            TSEL->p[P_REL] = 0;                          /* curve's ends nearest the wheat) */
+            TSEL->p[P_SUS] = 127;
+            if (PG[k])
+                go_title(PG[k]);
+            ui.force = 1; ui_draw();
+            if (!ui.wheat)
+                continue;
+            pages++;
+            for (uint32_t side = 0; side < 2u; side++) {
+                int32_t wx = side ? WHEAT_RX : WHEAT_LX;
+                cv_oy = 0;
+                cv_begin(12, 30, T_SURF);
+                wheat_draw(0, 0, side ? ui.wheat_f ^ 2u : ui.wheat_f);
+                for (y = 0; y < 30u; y++)
+                    for (x = 0; x < 12u; x++)
+                        n += host_screen[(Y_GRAPH + WHEAT_Y + y) * 240u + (uint32_t)wx + x] != cv_px[y * 12u + x];
+            }
+        }
+        *TSEL = keep;
+        bad += check("wheat tiles: only the wheat on HOME, ENV, LFO, FX (no graph drawn into them)", pages == 4u && n == 0u);
+    }
+    ui_power_on();
+    return bad;
+}
+
 /* 1.0.5: the MENU in tabs (ui_menu.c, menu_items.c MI_TAB): every tab 1..MTAB_ROWS rows in a run, each fitting the
  * page in S and LARGE; ALGORITHM between the tabs (wraps, back at a tab's last row), PRESETS within one (wraps), any of
  * KNOB 1..4 and OCT+ / OCT- change a value, OCT+ opens CALIBRATION and ABOUT, HOME closes (OCT- not); reopened at the
@@ -2070,6 +2130,7 @@ static int32_t roll_ink_row(const uint16_t *s, int32_t x0, int32_t x1, int32_t y
 static int roll_static_now(void)                  /* the screen is the static render (a forced redraw changes nothing) */
 {
     memcpy(roll_shot, host_screen, sizeof roll_shot);
+    ui.frame &= ~7u;                              /* (the wheat's sway steady across the draw: it is outside the strips) */
     ui.force = 1;
     ui_draw();
     return roll_diff(0, 0, 0, 0, 0) == 0;
@@ -2134,6 +2195,7 @@ static int test_roll(void)
     ui_power_on(); roll_settle();
     turn(EN_K4, 1); frame(); frame(); frame();
     memcpy(roll_shot, host_screen, sizeof roll_shot);
+    ui.frame &= ~7u;                              /* (the sway steady across the draw: only the strip may differ) */
     ui.force = 1; ui_draw();                       /* (snaps: the static render) */
     ok = roll_diff(STRIP(3), 0) == 0 && roll_diff(STRIP(3), 1) > 20u && !ui.roll[3].from[0];
     bad += check("roll: a mid-roll frame differs from the static render inside the value strip only", ok);
@@ -2146,6 +2208,7 @@ static int test_roll(void)
          str_eq(ui.roll[0].from, "120") && ui.roll[0].dir == 1;
     frame(); frame();
     memcpy(roll_shot, host_screen, sizeof roll_shot);
+    ui.frame &= ~7u;                              /* (the sway steady across the draw: only the strips may differ) */
     ui.force = 1; ui_draw();
     {   /* the header's strip: from the metronome's ink to the lock's place (ui_draw.c draw_head) */
         head_geo_t g;
@@ -2162,6 +2225,7 @@ static int test_roll(void)
     ui_power_on(); song.g[G_TUNE] = 10; roll_settle();
     turn(EN_K4, 1); frame(); frame();
     memcpy(roll_shot, host_screen, sizeof roll_shot);
+    ui.frame &= ~7u;                              /* (the sway steady across the draw: only the strip may differ) */
     ui.force = 1; ui_draw();
     ok &= song.g[G_TUNE] == 11 && roll_diff(STRIP(3), 1) > 20u && roll_diff(STRIP(3), 0) == 0;
     ok &= roll_diff(CARD_X(3), Y_LABEL + ROLL_Y, CARD_X(3) + 5 + text_w(&AF_M, "1"), Y_LABEL + ROLL_Y + ROLL_H, 1) == 0;
@@ -9856,6 +9920,7 @@ int main(void)
     bad += test_edit_quick_actions();
     bad += test_menu_prefs();
     bad += test_style();
+    bad += test_wheat();
     bad += test_head_centres();
     bad += test_head_metronome();
     bad += test_head_group();

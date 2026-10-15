@@ -202,6 +202,7 @@ static struct {
     /* drawn-state cache */
     char col[4][32];
     uint32_t graph_sig, head_sig, foot_sig, frame;
+    uint8_t wheat, wheat_f;      /* the stage's wheat (ui_graph.c wheat_page): on, its sway frame */
     /* rolling digits (ui_draw.c roll_*): the four card values and the header BPM */
     struct {
         char from[7];            /* the value rolling out; "" = idle */
