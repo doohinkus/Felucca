@@ -5,7 +5,7 @@
 //   node web/test_web.mjs
 // - editor.html: the protocol section (between PROTO-BEGIN/END) against its mock device (v1 commands,
 //   the user preset bank / librarian, library files, live pushes, older-firmware fallback, the v3 tracks
-//   and the mixer, the v5 drum grid in steps and user presets), its tab layout and ja/en strings,
+//   and the mixer, the v5 drum grid in steps and user presets), its tab layout and strings,
 //   and the user-sample pipeline byte for byte against tools/sampleio.py
 // - fm1pkg.js: productOf and logicalImage on build/felucca.fwsc (skipped without a build)
 // - fm1ota.js: a full install and an unplug during the write against a simulated FM-1
@@ -1384,8 +1384,8 @@ function fm6TabNoBank() {
     && !["fm6store", "fm6erase", "fm6bankexp"].some((id) => html.includes(`"${id}"`)), "FM6 tab: import, voices, send, factory load and the hint; no store / erase / bank export");
   ok(!/TARGET\.BANK|fm6Erase|fm6Store|defaultSlot/.test(code), "FM6 tab: no bank requests");
   const tb = html.slice(html.indexOf("const TEXT = {"), html.indexOf("\n};", html.indexOf("const TEXT = {")) + 2);
-  const T = vm.runInNewContext(tb.replace("const TEXT =", "(") + ")"), en = T.en, ja = T.ja;
-  ok(/send it to a track, then save a user preset \(SAVE\) or a project/.test(en.fm6Keep) && ja.fm6Keep && !/B1|B27|bank/i.test(en.fm6Help + en.fm6NeedDevice),
+  const T = vm.runInNewContext(tb.replace("const TEXT =", "(") + ")");
+  ok(/send it to a track, then save a user preset \(SAVE\) or a project/.test(T.fm6Keep) && !/B1|B27|bank/i.test(T.fm6Help + T.fm6NeedDevice),
     "FM6 tab: the hint (send to a track, then SAVE on the device), no B slots in the help");
 }
 
@@ -1514,15 +1514,15 @@ function editorTabs() {
     `editor: ${tabs.length} tabs, one panel each (${tabs.join(" ")})`);
   ok(/localStorage\.setItem\(TAB_KEY/.test(html) && /try \{ localStorage/.test(html) && /history\.replaceState\([^)]*"#" \+ name\)/.test(html)
     && /addEventListener\("hashchange"/.test(html), "editor: last tab in localStorage (try/catch) and in the URL hash");
-  /* every string key in both languages */
+  /* every used string key exists; the page is English only (no ja / en toggle, no CJK) */
   const tb = html.slice(html.indexOf("const TEXT = {"), html.indexOf("\n};", html.indexOf("const TEXT = {")) + 2);
   const TEXT = vm.runInNewContext(tb.replace("const TEXT =", "(") + ")");
-  const ja = new Set(Object.keys(TEXT.ja)), en = new Set(Object.keys(TEXT.en));
+  const keys = new Set(Object.keys(TEXT));
   const used = new Set([...html.matchAll(/data-t="(\w+)"|\bt\("(\w+)"\)|sayK\("(\w+)"|hint = "(\w+)"/g)].map((x) => x[1] || x[2] || x[3] || x[4]));
   for (const k of ["needDevice", "smpNone", "bankConnect", "bankNone", "selectedTrack", "selectTrack", "notesHelp", "live", "polling"]) used.add(k);
-  const miss = [...used].filter((k) => !ja.has(k) || !en.has(k));
-  const odd = [...ja].filter((k) => !en.has(k)).concat([...en].filter((k) => !ja.has(k)));
-  ok(!miss.length && !odd.length, `editor: every string in ja and en (${used.size} used${miss.length ? ", missing " + miss : ""}${odd.length ? ", one language only " + odd : ""})`);
+  const miss = [...used].filter((k) => !keys.has(k));
+  ok(!miss.length && !/[\u3040-\u30ff\u4e00-\u9fff\u3400-\u4dbf]/.test(tb),
+    `editor: every string exists, English only (${used.size} used${miss.length ? ", missing " + miss : ""})`);
   /* the page script parses (the browser's view of it) */
   const script = html.slice(html.indexOf("<script>") + 8, html.lastIndexOf("</script>"));
   let err = null;
