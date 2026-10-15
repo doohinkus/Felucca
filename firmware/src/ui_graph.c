@@ -7,8 +7,9 @@
  * graph_signature() changes. The look:
  * curves THEME (2 px), guides and empty marks RAISE, captions MID / DIM, the active thing ACCENT,
  * bars rounded; a list's selected row is a THEME bar with INK text. */
-#define PANEL_X0 10                                  /* the graphs' inner area: x 10..230 */
-#define PANEL_W 220
+static int32_t panel_x0 = 10, panel_w = 220;         /* the graphs' inner area: x 10..230, or 24..216 beside the wheat */
+#define PANEL_X0 panel_x0
+#define PANEL_W panel_w
 #define GOY 11                                       /* graphs drawn on a 100 px scale sit at y 11..111 */
 /* the height ADSR and LFO are drawn on: 100 px, or (MENU > LARGE's strip: draw_graph) the strip's ~ 56 */
 static int32_t graph_ht = 100;
@@ -22,7 +23,8 @@ static void graph_adsr(const track_t *t, uint16_t c)
     const page_t *pg = cur_page();
     int32_t a = 4 + t->p[pg->id[0]] * 50 / 127, d = 6 + t->p[pg->id[1]] * 50 / 127, r = 6 + t->p[pg->id[3]] * 60 / 127;
     int32_t top = 6 * graph_ht / 100, bot = 88 * graph_ht / 100, sus = t->p[pg->id[2]] * 1000 / 127;   /* 0..1000 */
-    int32_t x0 = 12, x1 = x0 + a, x3 = 226 - r, i, px, py;
+    int32_t x0 = PANEL_X0 + 2, x1 = x0 + a, x3 = PANEL_X0 + PANEL_W - 4 - r, i, px, py;   /* (12 .. 226 at full width;
+                                                                          * beside the wheat: narrower) */
     int32_t e = 32768;                                                  /* exp(-4.6 u), Q15 */
 #define EGY(lvl) (bot - (lvl) * (bot - top) / 1000)
     cv_rect(PANEL_X0, bot + 2, PANEL_W, 1, T_RAISE);
@@ -2229,6 +2231,71 @@ static void graph_song(void)
                      i < 4u ? "[K3] ADD SECTION" : "[SAVE] PROJECT A-D", T_MID, T_SURF, x0 - 10 - SG_X0);
     }
 }
+/* a field wheat, 12 x 30: the awns (rows 0..3), the kernel head (3..13, frame f 0..3: it sways a pixel
+ * beside the stem, a top band in and out with the frames), the leaf, the blade and the stem (14..29).
+ * Colours: THEME kernels and leaf, MID seams, awns, stem and blade */
+#define WHEAT_LX 8
+#define WHEAT_RX 220
+#define WHEAT_Y 10
+static void wheat_draw(int32_t x, int32_t y, uint32_t f)
+{
+    static const uint8_t KERN[11] = {2, 4, 6, 8, 8, 8, 8, 6, 6, 4, 2};   /* the kernel bands, rows 3..13 */
+    static const int8_t SWAY[4] = {-1, 0, 1, 0};
+    int32_t j, dx = SWAY[f & 3u], cx = x + 5 + dx;
+    for (j = 0; j < 4u; j++)                           /* the awns: a fan of bristles over the head */
+        cv_rect(cx - 3, y + j, 1, 1, T_MID), cv_rect(cx + 3, y + j, 1, 1, T_MID);
+    cv_rect(cx - 1, y + 1, 1, 1, T_MID), cv_rect(cx + 1, y + 1, 1, 1, T_MID);
+    for (j = 3u + (f & 1u); j < 14u; j++)              /* the kernels: a band in and out (odd frames: a row less) */
+    {
+        int32_t w = KERN[j - 3];
+        cv_rect(cx - w / 2, y + j, w, 1, T_THEME);
+        if (w >= 6)
+            cv_rect(cx - 1, y + j, 2, 1, T_MID);       /* (the seam between the kernel columns) */
+    }
+    for (j = 14u; j < 30u; j++)                        /* the stem, rooted under the swaying head */
+        cv_rect(x + 4, y + j, 2, 1, T_MID);
+    cv_rect(x + 2, y + 17, 2, 1, T_THEME);             /* the leaf, drooping left */
+    cv_rect(x + 1, y + 18, 2, 1, T_THEME);
+    cv_rect(x + 1, y + 19, 1, 1, T_MID);
+    cv_rect(x + 6, y + 22, 2, 1, T_THEME);             /* the blade, drooping right */
+    cv_rect(x + 7, y + 23, 2, 1, T_THEME);
+    cv_rect(x + 8, y + 24, 1, 1, T_MID);
+    GFX_HOOK_TEXT(x, y + cv_oy, x + 12, y + cv_oy + 30, "wheat", 4u);   /* the lint: nothing may overlap it */
+}
+/* the pages whose stage has room for the wheat: HOME's scope, the envelope, the LFO, FX, and an engine
+ * page that shows the scope (draw_graph's default: not WHEEL's drawbars, a sample, FM6's or DIGITAL's charts) */
+static int wheat_page(void)
+{
+    const page_t *pg = cur_page();
+    uint32_t e = TSEL->eng_req % NENGINES;
+    if (large_kind() != LK_OFF || home_tracks())        /* the strip and the lists: the stage needs its full width */
+        return 0;
+    if (ui.home)
+        return 1;
+    switch (pg->graph) {
+    case GR_ADSR: case GR_LFO: case GR_FX:              /* (not SLICER: its 16 columns span the stage) */
+        return 1;
+    case GR_NONE:
+        return !(pg->scope == SC_ENGINE && (ENGINES[e] == &ENG_WHEEL || (ENGINES[e] == &ENG_SAMPLE && sample_wave.ready) ||
+                                            e == ENGI_FM6 || (FELUCCA_FM4 && e == ENGI_DIGITAL))) &&
+               !(FELUCCA_FM4 && pg->id[0] == P_FM1_LEVEL && e == ENGI_DIGITAL);
+    default:
+        return 0;
+    }
+}
+static void wheat_tick(void)                          /* only the two wheat rectangles, every 8 UI frames */
+{
+    uint32_t f = (ui.frame >> 3) & 3u;
+    if (!ui.wheat || f == ui.wheat_f)
+        return;
+    ui.wheat_f = (uint8_t)f;
+    cv_begin(12, 30, T_SURF);
+    wheat_draw(0, 0, f);
+    cv_blit(WHEAT_LX, graph_y() + WHEAT_Y);
+    cv_begin(12, 30, T_SURF);
+    wheat_draw(0, 0, f ^ 2u);                          /* (the other one out of step) */
+    cv_blit(WHEAT_RX, graph_y() + WHEAT_Y);
+}
 static void draw_graph(void)
 {
     const page_t *pg = cur_page();
@@ -2236,10 +2303,16 @@ static void draw_graph(void)
     uint16_t c = ACC;
     uint32_t sig;
     if (!ui.home && pg->graph == GR_TRK) {
+        ui.wheat = 0;                                /* the tracks list: the stage's full width again */
+        panel_x0 = 10;
+        panel_w = 220;
         draw_tracks();
         return;
     }
     if (ui.home && home_tracks()) {                  /* MENU > HOME TRACKS (1.3) */
+        ui.wheat = 0;
+        panel_x0 = 10;
+        panel_w = 220;
         draw_home_tracks();
         return;
     }
@@ -2251,6 +2324,14 @@ static void draw_graph(void)
     cv_begin(240, graph_h(), T_BG);
     cv_rrect(3, 0, 234, graph_h(), 5, T_SURF, T_BG);   /* the panel (MENU > LARGE: the strip) */
     cv_bg = T_SURF;                                  /* (text drawn with cv_text lands on it) */
+    ui.wheat = (uint8_t)wheat_page();                /* the wheat, and the graphs' area beside it */
+    panel_x0 = ui.wheat ? 24 : 10;
+    panel_w = ui.wheat ? 192 : 220;
+    if (ui.wheat) {
+        ui.wheat_f = (uint8_t)((ui.frame >> 3) & 3u);
+        wheat_draw(WHEAT_LX, WHEAT_Y, ui.wheat_f);
+        wheat_draw(WHEAT_RX, WHEAT_Y, ui.wheat_f ^ 2u);
+    }
     cv_oy = GOY;                                     /* graphs on a 100 px scale */
     if (strip_kind() != SK_NONE) {                   /* MENU > LARGE: the strip */
         uint32_t k = strip_kind();
