@@ -14,6 +14,12 @@ C firmware for the M-VAVE FM-1 synthesizer (JieLi AC79 / pi32v2 toolchain), plus
 - Run the full suite after every change. There is no CI: the host tests are the only gate, so PRs must show `tests/run_tests.sh` passing.
 - Features must be verified on a real FM-1 by whoever can; ask the maintainer if you can't.
 
+## Browser emulator
+
+- `sh web/emu/build.sh` → `build/emu/{index.html, worklet.js, felucca.wasm, fonts/}` after one `./build.sh` (it needs `build/gen/`). `emcc` is installed but not on PATH — `source ~/emsdk/emsdk_env.sh` first.
+- The emulator compiles the firmware's actual sources (`web/emu/felucca_web.c` includes `ui_graph.c`, `ui_draw.c`, …), so firmware UI changes appear only after a rebuild — a stale `build/emu/felucca.wasm` shows old screens. No web-side work is needed: its `lcd_blit` writes the same framebuffer the worklet copies whole to the page every frame (`web/emu/worklet.js`).
+- Check it with `node web/emu/emu_test.mjs` (all ok), then serve and look: `python3 -m http.server 8000 --directory build/emu` → http://localhost:8000 (AudioWorklet needs http(s); `file://` won't run). Screenshots via Playwright on the `#screen` element; take two a moment apart — the animated bits (LED idle animation, sway etc.) change per frame phase, so compare within one phase.
+
 ## Commands an agent would guess wrong
 
 - Single test: tests compile individually — `cc -O1 -w -Ibuild/gen -Ifirmware/src -o /tmp/t tests/foo_test.c -lm && /tmp/t` (see the corresponding compile line in `tests/run_tests.sh` for the right `-D` flags).
