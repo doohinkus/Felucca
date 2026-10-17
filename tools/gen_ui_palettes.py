@@ -51,6 +51,9 @@ PALETTES = [
     ("MONO",   (0, 0, 0),       (0, 0, 0),       (255, 255, 255), (255, 255, 255), (255, 255, 255)),
     # appended (after MONO: saved ids are indices, append only). Also light, like PAPER.
     ("w33tSnx",(245, 222, 179), (228, 208, 164), (40, 30, 14),    (126, 42, 6),    (16, 98, 104)),
+    # appended. The easter egg's own colours (ui_graph.c the BANANA): the stage's blush pink the one active
+    # thing, the fruit's yellow the identity; a dark gray background so GLANCEING at the values is easy
+    ("BANANA", (34, 34, 40),    (52, 52, 60),    (255, 255, 255), (255, 255, 0),   (255, 202, 230)),
 ]
 BW = "MONO"
 BW_GREY = (82, 82, 82)             # MONO's one mid grey (RGB565 10/20/10): DIM LINE RAISE LANE

@@ -1967,8 +1967,14 @@ static void banana_frame_draw(int32_t x, int32_t y, uint32_t f, int flip)
                 cv_rect(x + BAN_SC * (flip ? BAN_COLS - i : i - n), y + BAN_SC * j, BAN_SC * n, BAN_SC, BAN_C[c]);
         }
     }
-    GFX_HOOK_TEXT(x - 3 * BAN_SC, y - 2 * BAN_SC + cv_oy, x + BAN_SC * BAN_COLS + 2 * BAN_SC, y + BAN_SC * BAN_H + 2 * BAN_SC + cv_oy,
-                  "banana", 4u);
+    {
+        int32_t y0 = y - 2 * BAN_SC + cv_oy, y1 = y + BAN_SC * BAN_H + 2 * BAN_SC + cv_oy;
+        if (y0 < 0)
+            y0 = 0;
+        if (y1 > (int32_t)cv_h)                          /* (the strips lead the scene up: the box, the canvas's) */
+            y1 = (int32_t)cv_h;
+        GFX_HOOK_TEXT(x - 3 * BAN_SC, y0, x + BAN_SC * BAN_COLS + 2 * BAN_SC, y1, "banana", 4u);
+    }
 }
 static uint32_t banana_sig;                          /* the stage as drawn (its ink on the screen) */
 /* the stage: the whole screen, light on every palette, the man in its middle; the scene into two strips of 120

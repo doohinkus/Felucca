@@ -619,8 +619,8 @@ static void mono_check(void)
 {
     uint32_t i, bw = settings.palette == UI_BW_INDEX;
     if (settings.palette != UI_GREY_INDEX && !bw) return;
-    if (strstr(cur_name, "BANANA"))
-        return;                                      /* (the fruit's yellow and its stage's brown on the B / W too) */
+    if (strstr(cur_name, "BANANA") || strstr(cur_name, "banana"))
+        return;                                      /* (the easter egg: the fruit's own colours, every palette) */
     for (i = 0; i < 240u * 240u; i++) {
         uint16_t c = swap16(host_screen[i]);
         int32_t d = (int32_t)((c >> 5) & 63u) - (int32_t)(c >> 11) * 2;
