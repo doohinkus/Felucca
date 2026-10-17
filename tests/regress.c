@@ -1278,7 +1278,10 @@ int main(int argc, char **argv)
             return 2;
         }
         fprintf(f, "# FELUCCA host CPU baseline (tests/regress.c): instructions per 44.1 kHz sample, cc -O2 on\n"
-                   "# the Mac (kernel-counted, ~1 %% run to run). The check allows +%.0f %%. Rewritten by BUDGET_UPDATE=1.\n",
+                   "# this Mac, kernel-counted (~1 %% run to run). Re-measured for the x86_64 Mac (clang 16 and\n"
+                   "# clang 17 measure it above the arm64 counts it was first written on) so the gate compares\n"
+                   "# like with like. The device's own budgets (target_budget.txt) stand. Allows +%.0f %%.\n"
+                   "# Rewritten by BUDGET_UPDATE=1.\n",
                 CPU_TOL * 100);
         for (i = c0; i < c1; i++)
             fprintf(f, "%s %.0f\n", J[i].name, J[i].r.ipc);
