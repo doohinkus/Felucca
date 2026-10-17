@@ -612,12 +612,15 @@ static void font_scene(const char *mode, const char *name)
     }
 }
 /* GREY: every pixel RGB565 gray (R = B, G = 2 R); MONO (black and white, its edges blended per channel): neutral
- * (R = B, G within 2 of 2 R, the 5-6-5 rounding). Other palettes: nothing */
+ * (R = B, G within 2 of 2 R, the 5-6-5 rounding); the BANANA's stage (the easter egg: the fruit's own colours,
+ * every palette). Other palettes: nothing */
 static uint32_t mono_bad;
 static void mono_check(void)
 {
     uint32_t i, bw = settings.palette == UI_BW_INDEX;
     if (settings.palette != UI_GREY_INDEX && !bw) return;
+    if (strstr(cur_name, "BANANA"))
+        return;                                      /* (the fruit's yellow and its stage's brown on the B / W too) */
     for (i = 0; i < 240u * 240u; i++) {
         uint16_t c = swap16(host_screen[i]);
         int32_t d = (int32_t)((c >> 5) & 63u) - (int32_t)(c >> 11) * 2;

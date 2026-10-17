@@ -1510,6 +1510,23 @@ static void ui_draw_page(uint32_t counting)
         name_draw();
         return;
     }
+    if (!ui.home && cur_page()->graph == GR_BANANA) {   /* the easter egg owns the whole screen (ui_graph.c
+                                                         * banana_stage): no head, no cards, no footer over it */
+        banana_stage();
+        if (ui.msg_t && !--ui.msg_t && ui.msg2[0]) {     /* (the same timers tick here as on the pages) */
+            str_cpy(ui.msg, ui.msg2, sizeof ui.msg);
+            ui.msg2[0] = 0;
+            ui.msg_t = 60;
+        }
+        if (ui.bpm_t)
+            ui.bpm_t--;
+        if (ui.hot_t)
+            ui.hot_t--;
+        if (ui.help_t)
+            ui.help_t--;
+        ui.force = 0;
+        return;
+    }
     if (ui.layer) {                                     /* a layer's map over the page (ui_layer.c) */
         if (ui.force)
             draw_frame();

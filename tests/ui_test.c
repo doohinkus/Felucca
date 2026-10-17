@@ -2055,7 +2055,7 @@ static int mono_screens(uint32_t pal, int (*chk)(void), uint32_t *n)
             settings.palette = pal; palette_set(pal);
             memset(host_screen, 0, sizeof host_screen);
             ui.force = 1; ui_draw();
-            ok &= chk();
+            ok &= cur_page()->graph == GR_BANANA || chk();   /* (the easter egg keeps its colours, play on) */
             (*n)++;
         }
         ui_power_on(); set_engine_of(TSEL, e); go_home();
@@ -2337,6 +2337,8 @@ static int test_soak_cards(void)
         quiet++;
         if (ui.menu || ui.layer || ui.confirm || name_on() || ui.uboot)
             continue;                                   /* (the cards are not drawn) */
+        if (!ui.home && cur_page()->graph == GR_BANANA)
+            continue;                                   /* (the easter egg owns the screen: no cards either) */
         for (c = 0; c < 5u; c++)
             old += ui.roll[c].from[0] && (uint8_t)(ui.frame - ui.roll[c].t0) >= ROLL_FRAMES;
         if (quiet > 45u && !ui.hot_t && !ui.bpm_t && !ui.msg_t && SOAK_RND(8u) == 0u) {
