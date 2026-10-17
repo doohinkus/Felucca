@@ -13,6 +13,9 @@ static int32_t panel_x0 = 10, panel_w = 220;         /* the graphs' inner area: 
 #define GOY 11                                       /* graphs drawn on a 100 px scale sit at y 11..111 */
 /* the height ADSR and LFO are drawn on: 100 px, or (MENU > LARGE's strip: draw_graph) the strip's ~ 56 */
 static int32_t graph_ht = 100;
+static void banana_poll(void);                       /* the BANANA page's level (below meter_px); graph_signature reads
+                                                      * the tracks' peaks and resets them, once a frame, when it shows */
+static uint16_t banana_lvl;                          /* its decayed level, 0 .. TS_MH-2 px of the meter */
 #include "ui_fm6op.c"                                /* EDIT > OPERATOR, OP ENV, OPERATOR 2: FM6's operators (their charts below) */
 
 /* Matches voice.c: attack is linear, decay and release are exponential
@@ -1195,6 +1198,11 @@ static uint32_t graph_signature(void)
     if (strip_kind() == SK_TITLE)                    /* MENU > LARGE: the page's title (its engine, its number) */
         return h ^ 0x5A17u;
     if (pg->graph == GR_NONE || pg->graph == GR_ARP) h ^= ui.frame / 2u;
+    if (pg->graph == GR_BANANA) {                    /* the dance: the level polled (the peaks are read and reset, once
+                                                      * a frame, only here: graph_banana draws the state it leaves) */
+        banana_poll();
+        return h ^ (banana_lvl > 2u ? 3u : 0u) ^ ((uint32_t)banana_lvl << 4) ^ ((ui.frame >> 2) & 3u);
+    }
     for (i = 0; i < P_COUNT; i++)
         h = (h ^ (uint32_t)t->p[i]) * 16777619u;
     h ^= (uint32_t)TSEL->preset * 7u + (uint32_t)song.g[G_SLOT] * 13u + TSEL->user * 257u + up_gen * 7919u + ui.uslot * 104729u +
@@ -1598,6 +1606,67 @@ static int32_t meter_px(int32_t a)                   /* |sample| (Q15) -> px: 60
         lg++;
     v = lg * 8 + (((a << 3) >> lg) & 7);             /* 8 log2(a): 48 (-54 dB) .. 128 (+6 dB) */
     return clamp((v - 48) * (TS_MH - 2) / 80, 0, TS_MH - 2);
+}
+
+/* ---------------------------------------------------------- the BANANA ---
+ * the easter egg, FAM_TRK's last page (params.c): a banana that dances while anything sounds, a bored one in
+ * silence. The level: the four tracks' output peaks (fx.c's t->peak, the MIXER's meters fall on the same read and
+ * reset, draw_tracks below), polled once a UI frame (graph_signature), then a small decay, so the dance lingers a
+ * beat after the last sound. The banana is hand-made of cv_rects, like the wheat (its ink declared to the lint,
+ * GFX_HOOK_TEXT: nothing may sit on it); a lying crescent 32 x 17 units of 2 px, ends up, thick in the middle
+ * and thin at the ends */
+static void banana_poll(void)
+{
+    uint32_t c, pk = 0;
+    for (c = 0; c < NTRK; c++) {
+        int32_t p = trk[c].peak;
+        trk[c].peak = 0;                             /* (one reader owns the peak, as the MIXER's meters) */
+        if ((uint32_t)p > pk)
+            pk = (uint32_t)p;
+    }
+    pk = (uint32_t)meter_px((int32_t)pk);            /* 0 in silence (-54 dB under: meter_px) .. TS_MH-2 */
+    if (pk > banana_lvl)
+        banana_lvl = (uint16_t)pk;
+    else if (banana_lvl)
+        banana_lvl = (uint16_t)(banana_lvl > 3u ? banana_lvl - 3u : 0u);
+}
+/* an eighth note, 4 x 8 px: the head at the bottom left, its stem up right */
+static void banana_note(int32_t x, int32_t y, uint16_t c)
+{
+    cv_rect(x + 3, y, 1, 8, c);                      /* the stem */
+    cv_rect(x, y + 5, 4, 3, c);                      /* the head, tilted on it */
+}
+/* the banana: column by column a band of 2 px, x and y in units of 2 px. A lying crescent, ends up (that is what
+ * reads as a banana), MID under (the shade) and at its tips; column i of 32: a 0 at the middle, 16 at an end, the
+ * curve's rise dy 0..dep, the thickness th 6..1 units (a fat middle, thin ends) centred over the curve. Pose
+ * 0 .. 1: the dance's bounce, four px a unit; 2: bored, the same banana still, sunk a unit */
+static void banana_body(int32_t x, int32_t y, uint32_t pose)
+{
+    int32_t i, dep = 14, bounce = pose == 0u ? -4 : pose == 1u ? 4 : 2;
+    for (i = 0; i < 32; i++) {
+        int32_t a = i < 16 ? 16 - i : i - 15;        /* 1 in the middle, 16 at the left end, 16 at the right */
+        int32_t dy = (a * a * dep + 128) / 256;      /* 0 bands, dep at the ends */
+        int32_t th = 6 - (a * 5 + 10) / 16;
+        int32_t c = dep - dy - (th - 1) / 2;         /* the band's first row, on the curve */
+        cv_rect(x + 2 * i, y + bounce + 2 * c, 2, 2 * th, T_THEME);
+        cv_rect(x + 2 * i, y + bounce + 2 * (c + th - 1), 2, 2, T_MID);   /* the underside */
+    }
+    cv_rect(x - 2, y + bounce + 2 * (dep - dep), 2, 4, T_MID);           /* the stem: two units more of the curve, hooked */
+    cv_rect(x - 2, y + bounce - 2, 2, 2, T_MID);
+}
+/* the page: the banana in the panel's middle, two notes flickering beside it while it dances, its mood under it */
+static void graph_banana(void)
+{
+    uint32_t dance = banana_lvl > 2u, pose = dance ? (ui.frame >> 2) & 1u : 2u;
+    int32_t bx = 88, by = 24, bob = pose == 0u ? -1 : 1;
+    if (dance) {
+        banana_note(46, 26 + bob, T_THEME);          /* left of the banana, bobbing with it */
+        banana_note(166, 20 - bob, T_ACCENT);        /* right, out of step */
+    }
+    banana_body(bx, by, pose);
+    GFX_HOOK_TEXT(bx - 2, by - 6, bx + 64, by + 40, "banana", 4u);   /* the art's ink, the lint: nothing may sit on it */
+    GFX_HOOK_ALIGN(3, 96, 237, 108, AL_HV, "banana's mood centred in the panel");
+    cv_text_in(3, 96 + CAP_IN(S, 12), 234, &AF_S, dance ? "DANCING" : "BORED", dance ? T_THEME : T_MID, T_SURF);
 }
 
 /* a knob's ring: 270 degrees (7:30 .. 4:30 o'clock), 2 px, anti-aliased, from the quadrant mask of its size
@@ -2409,6 +2478,10 @@ static void draw_graph(void)
         case GR_TOOLS:
             cv_oy = 0;
             panel_note("TURN TO PICK", "[OCT+] CONFIRM", 0);
+            break;
+        case GR_BANANA:
+            cv_oy = 0;
+            graph_banana();                      /* the easter egg (above meter_px) */
             break;
 #if FELUCCA_SLICE
         case GR_SLICES:

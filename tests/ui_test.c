@@ -2712,7 +2712,7 @@ static int test_presets_knob(void)
     return bad;
 }
 
-/* 1.2 (Discussion #153): the pages by button. HOME: HOME > MIXER > CLOCK; SEQ: STEP <-> AUTOMATION, held SEQ TOOLS
+/* 1.2 (Discussion #153): the pages by button. HOME: HOME > MIXER > CLOCK > BANANA; SEQ: STEP <-> AUTOMATION, held SEQ TOOLS
  * everywhere; GLO: SONG (GLOBAL became CLOCK, SYSTEM the MENU's); SAVE: USER -> PRESETS -> PHRASES -> PROJECT -> TOOLS (1.5). AUTOMATION's list edits a step's
  * CHANCE / RATCH (the step's own fields, nothing else), one undo each; a remembered page that left its family */
 static int steps_but(const track_t *t, const step_t *ref, uint32_t at, const step_t *want)   /* the steps = ref, at: want */
@@ -2744,7 +2744,8 @@ static int test_page_cycles(void)
         uint32_t f = PAGES[i].fam;
         ok &= f != FAM_SEQ || PAGES[i].graph == GR_ROLL || PAGES[i].graph == GR_EVENTS;
         ok &= f != FAM_GLO || PAGES[i].graph == GR_SONG;   /* (1.2: GLO's only page) */
-        ok &= f != FAM_TRK || PAGES[i].graph == GR_TRK || str_eq(PAGES[i].title, "CLOCK");   /* HOME's: MIXER CLOCK */
+        ok &= f != FAM_TRK || PAGES[i].graph == GR_TRK || str_eq(PAGES[i].title, "CLOCK") ||
+              str_eq(PAGES[i].title, "BANANA");   /* HOME's: MIXER CLOCK, and the easter egg's BANANA last */
         ok &= PAGES[i].graph != GR_TRK || f == FAM_TRK;
         ui_power_on(); ui.home = 0; ui.page = (uint8_t)i; page_entered();
         ok &= FAM_BTN[cur_fam()] == (f == FAM_TRK ? B_HOME : f == FAM_GLO ? B_GLO : f == FAM_SEQ ? B_SEQ :
@@ -2753,7 +2754,7 @@ static int test_page_cycles(void)
     for (i = 0; i < NPAGES; i++)
         ok &= !str_eq(PAGES[i].title, "PATTERN") && !str_eq(PAGES[i].title, "CHANCE") && !str_eq(PAGES[i].title, "AUTO LIST");
     bad += check("1.2: SEQ has STEP and AUTOMATION only; SONG is GLO's only page, PHRASES SAVE's, MIXER and CLOCK HOME's "
-                 "(their LED HOME)", ok);
+                 "(and the easter egg's BANANA), (their LED HOME)", ok);
     {   /* 1.2: GLOBAL and SYSTEM are gone; their knobs: BPM SWG CLK on HOME > CLOCK, TUNE and ROUT on no page (the MENU's),
          * MIDI SYNC CPU on none (INFO shows the USB state and the CPU) */
         uint32_t k, clock = 0;
@@ -2922,14 +2923,19 @@ static int test_product_ux(void)
         song.g[G_CLOCK] = clk;
     }
     press(B_HOME);
-    ok &= ui.home && !ui.menu;
+    ok &= !ui.home && cur_page()->graph == GR_BANANA && cur_fam() == FAM_TRK;   /* the cycle's easter egg last */
+    press(B_HOME);
+    ok &= ui.home && !ui.menu;                        /* (from BANANA: home) */
     press(B_HOME);
     ok &= cur_page()->graph == GR_TRK;
     go_title("ENV"); press(B_HOME);
     ok &= ui.home;
     go_title("CLOCK"); press(B_HOME);
+    ok &= cur_page()->graph == GR_BANANA && !ui.home;   /* (CLOCK: the next of the cycle) */
+    press(B_HOME);
     ok &= ui.home;
-    bad += check("1.2: HOME cycles HOME > MIXER > CLOCK > HOME (CLOCK: BPM SWG CLK, HOME's LED); from any other page HOME", ok);
+    bad += check("1.2: HOME cycles HOME > MIXER > CLOCK > BANANA > HOME (CLOCK: BPM SWG CLK, HOME's LED); from any "
+                 "other page HOME", ok);
     hold(B_HOME);
     bad += check("1.2: HOME held still opens the menu", ui.menu == 1);
     ui_power_on();
@@ -9586,10 +9592,11 @@ static int test_home_tracks(void)
     bad += check("1.3 HOME > TRACKS: K1..K4 edit the selected track (HOME's four), ALGORITHM moves the selected row", ok);
     press(B_HOME); ok = !ui.home && cur_page()->graph == GR_TRK;
     press(B_HOME); ok &= !ui.home && str_eq(cur_page()->title, "CLOCK");
+    press(B_HOME); ok &= !ui.home && cur_page()->graph == GR_BANANA;   /* (1.6: the easter egg in the cycle) */
     press(B_HOME); ok &= ui.home;
     frame();
     ok &= tr_px(3 + 22, tr_y(3) + 1) == T_THEME;
-    bad += check("1.3 HOME > TRACKS: HOME tapped still goes HOME > MIXER > CLOCK > HOME (the rows back)", ok);
+    bad += check("1.3 HOME > TRACKS: HOME tapped still goes HOME > MIXER > CLOCK > BANANA > HOME (the rows back)", ok);
 
     ui_prefs |= PREF_LARGE;                             /* MENU > LARGE: the cards as on a list page, the rows */
     ui.force = 1; frame();

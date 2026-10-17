@@ -768,6 +768,7 @@ enum { S_HOME, S_HOME_IDLE, S_MESSAGE, S_MESSAGE_KEY, S_MESSAGE_NOFILE, S_PRESET
        S_DETAIL, S_DETAIL_PLAYING, S_DETAIL_REST, S_DETAIL_DRUM, S_ROLL_MARKS, S_DRUM_MARKS, S_HELP_DETAIL,
        S_DETAIL_COND, S_DETAIL_FILL, S_AUTO_COND, S_GLO_FILL, S_SEQ_EUCLID, S_SEQ_EUCLID_DRUM, S_SEQ_EUCLID_64,
        S_MENU_SELECT, S_PROJECT_ERASE, S_CONFIRM_ERASE_PROJ, S_TOOLS_CLEAN, S_CONFIRM_CLEAN,
+       S_BANANA, S_BANANA_DANCE,   /* (the easter egg: silent, and dancing) */
        S_MENU_MIDI_TRACK, S_MENU_MIDI_TCH_UNUSED, S_MENU_MIDI_AUTO, S_HOME_TRACKS_MIDI, S_MIXER_MIDI, S_EDIT_PHASE_FOLD, S_COUNT };
 static const char *const S_NAME[S_COUNT] = {"home", "home_idle", "message", "message_key", "message_nofile", "presets", "presets_nofav", "user",
     "phrases", "project", "tools", "song_empty", "song", "step", "auto_steps", "auto_add_chance", "automation", "drum",
@@ -799,6 +800,7 @@ static const char *const S_NAME[S_COUNT] = {"home", "home_idle", "message", "mes
     "detail_cond", "detail_fill", "auto_cond", "layer_glo_fill", "layer_seq_euclid", "layer_seq_euclid_drum",
     "layer_seq_euclid_64",
     "menu_select", "project_erase", "confirm_erase_project", "tools_clean", "confirm_clean",
+    "banana", "banana_dancing",
     "menu_midi_track", "menu_midi_channels_unused", "menu_midi_auto_select", "home_tracks_midi", "mixer_midi", "edit_phase_fold"};
 
 /* the STEP page's piano roll (ui_graph.c graph_roll) on track 1, stopped unless said: an empty pattern; ACID in
@@ -1127,6 +1129,10 @@ static void setup(int s)
     case S_ARP: go_title("ARP"); break;
     case S_VOICE: go_title("VOICE"); break;
     case S_CLOCK: go_title("CLOCK"); break;          /* (1.2: HOME > MIXER > CLOCK; up to 1.1.5 GLO > GLOBAL) */
+    case S_BANANA: banana_lvl = 0u; go_title("BANANA"); break;    /* the easter egg: still, in silence */
+    case S_BANANA_DANCE:                             /* .. sounding (the draw polls the peaks: the dance) */
+        banana_lvl = 0u; trk[1].peak = 30000u; trk[2].peak = 20000u;
+        go_title("BANANA"); break;
     /* 1.2: the old SYSTEM page's items in the MENU: MIDI > MIDI IN (ROUT) on CH5-8; AUDIO > TUNE (-12 ct) selected;
      * SYSTEM > INFO (the USB state, the CPU load) */
     case S_MENU_MIDI: ui.menu = 1; ui.menu_sel = MI_MIDIIN; song.g[G_ROUTE] = 2; break;
