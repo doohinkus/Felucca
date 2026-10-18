@@ -27,7 +27,7 @@ The loop in order, per change:
 2. **Preview it**: `source ~/emsdk/emsdk_env.sh && sh web/emu/preview.sh` → http://localhost:8000, look at the screen (or have the agent screenshot it with Playwright). It rebuilds the wasm from the current sources each time, every time — no stale-screen misses.
 3. **Approve** (the user looks at the emulator, or a real FM-1 when only hardware will tell — see "verified on a real FM-1" above).
 4. **Test it**: the change-class critical tests at iteration time (`QUICK=1` as the floor); the **full suite** before the PR is posted and always before a publish.
-5. **Publish** (the full bar, in order, alone in a commit): `./build.sh --release X.Y` → full `tests/run_tests.sh` green at that exact commit → verified on the real FM-1 → `sh web/publish.sh` (gh-pages: installer + editor).
+5. **Publish** (the full bar, in order, alone in a commit): `./build.sh --release X.Y` → full `tests/run_tests.sh` green at that exact commit → verified on the real FM-1 → `sh web/publish.sh X.Y` (gh-pages: the installer, the editor and the emulator as `webapp/try/` — all three come from the *current build*, so build first, publish after; the emulator's build needs `emcc` on PATH: `source ~/emsdk/emsdk_env.sh`). Dev builds publish the same way without a version argument (`sh web/publish.sh dev`).
 
 Never regenerate baselines as part of a feature change: reviewable recalibrations (host fences re-measured for the machine, like the Intel x86_64 one) go in their own commit, documented, with `GOLDEN_UPDATE` / `BUDGET_UPDATE` as above.
 
