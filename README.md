@@ -1,5 +1,7 @@
 # Felucca (w33tsnx)
 
+This repo is a fork of [Felucca](https://github.com/hugelton/Felucca), the community firmware for the M-VAVE FM-1 — same engines, same sound, plus a few extra touches of its own: the **w33tSnx wheat-field palette**, the **BANANA palette**, and the dancing banana (HOME's cycle: MIXER, CLOCK, BANANA, HOME — it dances while anything plays).
+
 [![License: GPL-3.0-only](https://img.shields.io/badge/license-GPL--3.0--only-blue.svg)](LICENSE)
 
 ![Felucca (w33tsnx): the ANALOG ACID sound's home page](docs/felucca-banana.gif)
