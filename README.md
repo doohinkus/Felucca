@@ -2,7 +2,7 @@
 
 [![License: GPL-3.0-only](https://img.shields.io/badge/license-GPL--3.0--only-blue.svg)](LICENSE)
 
-![Felucca (w33tsnx) 1.0](docs/felucca-1.0.png)
+![Felucca (w33tsnx): the ANALOG ACID sound's home page](docs/felucca-banana.gif)
 
 Multi-engine synthesizer firmware for the M-VAVE FM-1, **version 1.6**. Connect the FM-1 to a computer by USB, open the
 [web installer](https://doohinkus.github.io/Felucca/) in Chrome or Edge and press Install; no extra hardware is needed.
