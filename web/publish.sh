@@ -8,12 +8,18 @@
 # Makes the site from the package in build/felucca.fwsc with web/make_site.py, then commits it to
 # the gh-pages branch with the index plumbing (a temp index, write-tree / commit-tree: no worktree,
 # the branch's checkout never exists) and pushes it. The fetched remote head is the parent, so every
-# publish fast-forwards what is on the server.
+# publish fast-forwards what is on the server. The emulator (webapp/try/) is built from the current
+# sources first: emcc needs to be on PATH (source ~/emsdk/emsdk_env.sh once per shell).
 # Enable Pages once in the GitHub UI: Settings > Pages > Deploy from a branch: gh-pages, / (root).
 set -e
 VER="${1:-dev}"
 cd "$(dirname "$0")/.."
 [ -f build/felucca.fwsc ] || { echo "publish: run ./build.sh first (build/felucca.fwsc)"; exit 1; }
+if ! command -v emcc >/dev/null 2>&1; then
+    echo "publish: emcc not on PATH (source ~/emsdk/emsdk_env.sh: the try page needs the emulator's build)"
+    exit 1
+fi
+sh web/emu/build.sh
 
 SITE=$(mktemp -d "${TMPDIR:-/tmp}/felucca-site.XXXXXX") || exit 1
 INDEX=$(mktemp "${TMPDIR:-/tmp}/felucca-index.XXXXXX") || exit 1

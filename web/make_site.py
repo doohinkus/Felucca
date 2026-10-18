@@ -56,6 +56,8 @@ def main(pkg, version, out):
             raise SystemExit(f"index_pkg.html must contain {mark} once; update make_site.py")
     html = html.replace("/*LIB*/", lib).replace("/*META*/", meta)
     inst, ed, fw = out / "webapp" / "installer", out / "webapp" / "editor", out / "firmware"
+    emu = HERE.parent / "build" / "emu"
+    try_ = out / "webapp" / "try"               # the browser emulator (build/emu, felucca.wasm: the current build)
     for d in (inst, ed, fw):
         d.mkdir(parents=True, exist_ok=True)
     for old in fw.glob("felucca-*.fwsc"):          # one package: the current one
@@ -78,11 +80,17 @@ def main(pkg, version, out):
     for f in ("fukiai.ttf", "FUKIAI-LICENSE.txt", "fm1backup.js"):
         if (HERE / f).exists():
             shutil.copy(HERE / f, ed / f)
+    emu_files = ("index.html", "worklet.js", "felucca.wasm")
+    if all((emu / f).is_file() for f in emu_files):
+        shutil.copytree(emu, try_, dirs_exist_ok=True)
+    else:
+        raise SystemExit(f"publish: the emulator's build is missing or stale: build/emu needs {', '.join(emu_files)} "
+                         "(web/emu/build.sh, or let web/publish.sh make it)")
     (out / "index.html").write_text(
         '<!doctype html><meta charset="utf-8"><title>Felucca</title>'
         '<meta http-equiv="refresh" content="0; url=webapp/installer/">'
         '<a href="webapp/installer/">Felucca installer</a>\n', encoding="utf-8")
-    print(f"site: {out}: webapp/installer ({len(html)} B), webapp/editor, firmware/{name} ({len(raw)} B, {product})")
+    print(f"site: {out}: webapp/installer ({len(html)} B), webapp/editor, webapp/try (the emulator), firmware/{name} ({len(raw)} B, {product})")
 
 
 if __name__ == "__main__":
