@@ -7,9 +7,10 @@
 Multi-engine synthesizer firmware for the M-VAVE FM-1, **version 1.6**. Connect the FM-1 to a computer by USB, open the
 [web installer](https://doohinkus.github.io/Felucca/) in Chrome or Edge and press Install; no extra hardware is needed.
 Installing is at your own risk: M-VAVE's updater or the installer's **Return to official V15** takes you back.
-Want to look around first? [Try it in your browser](https://doohinkus.github.io/Felucca/webapp/editor/), no FM-1 needed.
+Want to look around first? [Try it in your browser](https://doohinkus.github.io/Felucca/webapp/try/), no FM-1 needed.
 
 - Install: [web installer](https://doohinkus.github.io/Felucca/), or `tools/fm1_install.py` from a terminal
+- Try it in the browser: [the emulator](https://doohinkus.github.io/Felucca/webapp/try/), no FM-1 needed
 - Edit: [web editor](https://doohinkus.github.io/Felucca/webapp/editor/)
 - Read: the manual is in the [wiki](https://github.com/doohinkus/Felucca/wiki/Home): [Installation](https://github.com/doohinkus/Felucca/wiki/Installation) ·
   [Controls](https://github.com/doohinkus/Felucca/wiki/Controls) · [Menu](https://github.com/doohinkus/Felucca/wiki/Menu) ·
