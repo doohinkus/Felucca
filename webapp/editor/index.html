@@ -13,8 +13,9 @@
   /* Fukiai: Hügelton Instruments' icon font (MIT, FUKIAI-LICENSE.txt). Icons are text in .ic spans;
      they stay hidden until the face has loaded (html.fk), so a missing font never shows boxes. */
   @font-face { font-family: "Fukiai"; src: url("fukiai.ttf") format("truetype"); font-display: block; unicode-range: U+EA00-EB09; }
-  /* w33tSnx (the FM-1's palette: BG SURF TEXT THEME ACCENT, tools/gen_ui_palettes.py) */
-  :root { --bg: #F5DEB3; --fg: #281E0E; --dim: #65583F; --line: #D0BB95; --theme: #7E2A06; --accent: #106268; }
+  /* BANANA (the FM-1's palette: BG SURF TEXT THEME ACCENT, tools/gen_ui_palettes.py); the derived tokens:
+   * DIM (189, 189, 191) mix(BG, TEXT, 70 %), LINE (74, 74, 79) mix 18 % */
+  :root { --bg: #222228; --fg: #FFFFFF; --dim: #BDBDBF; --line: #4A4A4F; --theme: #FFFF00; --accent: #FFCAE6; }
   html { color-scheme: light dark; }
   body { margin: 0; background: var(--bg); color: var(--fg);
          font: 13px/1.4 -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
